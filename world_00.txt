@@ -1,0 +1,5 @@
+N Sun
+C 1 1 0
+S 300
+M cube.obj
+--
