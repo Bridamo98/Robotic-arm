@@ -95,11 +95,10 @@ protected:
   Mesh*       m_Mesh2;
   //Mesh*       m_Path;
   float       r;
-  float       angx;
-  float       angy;
-  float       angz;
-
+  float       ang[3];
+  float       d[3];
   float       pos[3];
+  bool ultimo;
 
   //float m_Radius1;
   //float m_Radius2;

@@ -217,9 +217,9 @@ moveArt(int name, unsigned char axis, int sense){
     }
   }else{
     for( SpatialObject* child: this->m_Children )
-      child->moveArt(name, axis, sense);  
+      child->moveArt(name, axis, sense);
   }
-  
+
 }
 
 // -------------------------------------------------------------------------
@@ -236,40 +236,40 @@ drawInOpenGLContext( GLenum mode )
   if(this->artSel!=0){
     switch(this->artSel){
       case -3:{
-        this->angz = this->angz-1.0;
-        glRotatef(this->angz,0,0,1);
+        this->d[2] = this->d[2]-1.0;
+
         std::cout<<"-------"<<artSel<<std::endl;
       }
         break;
       case -2:{
-        this->angy = this->angy -1.0;
-        glRotatef(this->angy,0,1,0);
+        this->d[1] = this->d[1] -1.0;
+
         std::cout<<"-------"<<artSel<<std::endl;
       }
         break;
       case -1:{
-        this->angx = this->angx-1.0;
-        glRotatef(this->angx,1,0,0);
+        this->d[0] = this->d[0]-1.0;
+
         std::cout<<"-------"<<artSel<<std::endl;
       }
         break;
       case 1:{
-        this->angx = this->angx+1.0;
+        this->d[0] = this->d[0]+1.0;
         std::cout<<"-------"<<artSel<<std::endl;
-        glRotatef(this->angx,1,0,0);
-      }        
+
+      }
         break;
       case 2:{
-        this->angy = this->angy+1.0;
+        this->d[1] = this->d[1]+1.0;
         std::cout<<"-------"<<artSel<<std::endl;
-        glRotatef(this->angy,0,1,0);
-      }        
+
+      }
         break;
       case 3:{
-        this->angz = this->angz+1.0;
-        glRotatef(this->angz,0,0,1); 
+        this->d[2] = this->d[2]+1.0;
+
         std::cout<<"-------"<<artSel<<std::endl;
-      }        
+      }
         break;
       default:
         std::cout<<"default"<<std::endl;
@@ -277,6 +277,9 @@ drawInOpenGLContext( GLenum mode )
     }
     this->artSel = 0;
   }
+  glRotatef(this->d[2],0,0,1);
+  glRotatef(this->d[1],0,1,0);
+  glRotatef(this->d[0],1,0,0);
 
   //std::cout<<this->angx<<"-"<<this->angy<<"-"<<this->angz<<std::endl;
 
@@ -296,8 +299,11 @@ drawInOpenGLContext( GLenum mode )
     this->m_CurrentAngle = 2.0 * _PI * s / ( this->m_Frequency * 1000.0 );
   } // end if*/
   glPushMatrix( );
-  glRotatef(this->angy,0,1,0);
-  glRotatef(this->angx,1,0,0);
+  glRotatef(this->ang[1],0,1,0);
+  glRotatef(this->ang[0],1,0,0);
+  //glRotatef(this->angy-(_PI/2.0),0,1,0);
+  //glRotatef(this->angz,0,0,1);
+
   glTranslatef(0,this->r/2.0,0);
   glScalef( 1, this->r, 1 );
   this->m_Mesh2->drawInOpenGLContext( mode );
@@ -452,6 +458,9 @@ _strIn( std::istream& in )
   this->pos[0]=x;
   this->pos[1]=y;
   this->pos[2]=z;
+  this->d[0]=0.0;
+  this->d[1]=0.0;
+  this->d[2]=0.0;
   float r = std::sqrt((x*x)+(y*y)+(z*z));
   this->r = r;
   std::cout<<this->r<<std::endl;
@@ -483,7 +492,7 @@ _strIn( std::istream& in )
       phi = (_PI/2.0)*(-1.0);
     }else{
       std::cout<<"x mayor o igual a 0"<<std::endl;
-      phi = (_PI/2.0); 
+      phi = (_PI/2.0);
     }
   }
   if(z < 0.0){
@@ -491,12 +500,12 @@ _strIn( std::istream& in )
     phi = _PI + std::atan(x/z);
   }
 
-  this->angx = theta*_180_PI;
-  this->angy = phi*_180_PI;
-  this->angz = -theta*_180_PI;
+  this->ang[0] = theta*_180_PI;
+  this->ang[1] = phi*_180_PI;
+  this->ang[2] = -theta*_180_PI;
 
-  std::cout<<this->angx<<" "<<this->angy<<" "<<this->angz<<std::endl;
-  
+  std::cout<<this->ang[0]<<" "<<this->ang[1]<<" "<<this->ang[2]<<std::endl;
+
   if( this->m_Mesh != nullptr )
     delete this->m_Mesh;
   this->m_Mesh = new Mesh( "dodecaedro.obj" );
