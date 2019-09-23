@@ -13,6 +13,10 @@
 // -------------------------------------------------------------------------
 Camera myCamera;//esto va
 SpatialObject* myStar = nullptr;//cambiar el nombre
+bool articulacionSeleccionada = false;
+bool ejeSeleccionado = false;
+int artSel;
+unsigned char axis;
 
 // -------------------------------------------------------------------------
 SpatialObject* initWorld( int argc, char* argv[] );//esto va
@@ -35,6 +39,7 @@ int main( int argc, char* argv[] )
   glutInitWindowPosition( 50, 50 );
   glutInitWindowSize( 1024, 768 );
   glutCreateWindow( "A solar system..." );//cambiar nombre
+  glEnable(GL_DEPTH_TEST);//Para permitir efecto de superposición
 
   // Init world
   try
@@ -65,9 +70,9 @@ SpatialObject* initWorld( int argc, char* argv[] )//cambiar tipo de retorno y fu
   // Initialize camera//cambiar--Listo
   myCamera.setFOV( 45 );
   myCamera.setPlanes( 1e-2, 100000 );
-  myCamera.move( Vector( 0, 0, 0 ) );
-  myCamera.rotY(90);
-  myCamera.rotZ(90);
+  myCamera.move( Vector( 0, 0, 30 ) );
+  //myCamera.rotY(90);
+  //myCamera.rotZ(90);
   
 
 
@@ -122,7 +127,12 @@ void resizeCbk( int w, int h )
   myCamera.setWindow( w, h );
   myCamera.loadProjectionMatrix( );
 }
+//--------------------------------------------------------------------------
+void SpecialKeyboardCbk( int key, int x, int y ) // id tecla especial, GLUT_F1 GLUT_UP, etc -
+{
 
+  
+}
 // -------------------------------------------------------------------------
 void keyboardCbk( unsigned char key, int x, int y )
 {
@@ -131,37 +141,139 @@ void keyboardCbk( unsigned char key, int x, int y )
   case 'w': case 'W':
   {
     myCamera.forward( 10 ) ;
-    glutPostRedisplay( );
   }
     break;
   case 's': case 'S':
   {
     myCamera.forward( -10 ) ;
-    glutPostRedisplay( );
   }
     break;
   case 'a': case 'A':
   {
     myCamera.strafe( -10 ) ;
-    glutPostRedisplay( );
   }
     break;
   case 'd': case 'D':
   {
     myCamera.strafe( 10 ) ;
-    glutPostRedisplay( );
   }
     break;
-  case 'p': case 'P':
+  case '1':
   {
-    myStar->startAnimation( );
-    glutPostRedisplay( );
+    if(!articulacionSeleccionada){
+      articulacionSeleccionada = true;
+      artSel=1;
+      std::cout<<"entra "<<key<<std::endl;
+    }
   }
     break;
-  case 'o': case 'O':
+  case '2':
   {
-    myStar->stopAnimation( );
-    glutPostRedisplay( );
+    if(!articulacionSeleccionada){
+      articulacionSeleccionada = true;
+      artSel=2;
+      std::cout<<"entra "<<key<<std::endl;
+    } 
+  }
+    break;
+  case '3':
+  {
+    if(!articulacionSeleccionada){
+      articulacionSeleccionada = true;
+      artSel=3;
+      std::cout<<"entra "<<key<<std::endl;
+    }
+  }
+    break;
+  case '4':
+  {
+    if(!articulacionSeleccionada){
+      articulacionSeleccionada = true;
+      artSel=4;
+      std::cout<<"entra "<<key<<std::endl;
+    }
+  }
+    break;
+  case '5':
+  {
+    if(!articulacionSeleccionada){
+      articulacionSeleccionada = true;
+      artSel=5;
+      std::cout<<"entra "<<key<<std::endl;
+    }
+  }
+    break;
+  case '6':
+  {
+    if(!articulacionSeleccionada){
+      articulacionSeleccionada = true;
+      artSel=6;
+      std::cout<<"entra "<<key<<std::endl;
+    }
+  }
+    break;
+  case '7':
+  {
+    if(!articulacionSeleccionada){
+      articulacionSeleccionada = true;
+      artSel=7;
+      std::cout<<"entra "<<key<<std::endl;
+    }
+  }
+    break;
+  case '8':
+  {
+    if(!articulacionSeleccionada){
+      articulacionSeleccionada = true;
+      artSel=8;
+      std::cout<<"entra "<<key<<std::endl;
+    }
+  }
+    break;
+  case '9':
+  {
+    if(!articulacionSeleccionada){
+      articulacionSeleccionada = true;
+      artSel=9;
+      std::cout<<"entra "<<key<<std::endl;
+    }
+  }
+    break;
+    case 'p': case 'P':
+  {
+    //agarrar bola
+  }
+    break;
+  case '-':
+  {
+    if(ejeSeleccionado){
+      myStar->moveArt(artSel, axis, -1);
+      std::cout<<"entra "<<key<<std::endl;
+    }
+  }
+    break;
+  case '+':
+  {
+    if(ejeSeleccionado){
+      myStar->moveArt(artSel, axis, 1);
+      std::cout<<"entra "<<key<<std::endl;
+    } 
+  }
+    break;
+  case 'q':case 'Q':
+  {
+    articulacionSeleccionada = false;
+    ejeSeleccionado = false;
+    std::cout<<"entra "<<key<<std::endl;
+  }
+    break;
+  case 'x':case 'X':case 'y':case 'Y':case 'z':case 'Z':
+  {
+    if(articulacionSeleccionada && !ejeSeleccionado){
+      axis = key;
+      ejeSeleccionado = true;
+      std::cout<<"entra "<<key<<std::endl;
+    }
   }
     break;
   case 27: // ESC
@@ -170,6 +282,7 @@ void keyboardCbk( unsigned char key, int x, int y )
   default:
     break;
   } // end switch
+  glutPostRedisplay( );
     
   /* TODO
    void KeyDown(unsigned char key, int x, int y)

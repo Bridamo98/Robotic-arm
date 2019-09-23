@@ -68,13 +68,14 @@ public:
   //! Other methods
   //@{
   const int& getName( ) const;
-  const float& getScale( ) const;
+  //const float& getScale( ) const;
   //@}
 
   //void setPath( float r1, float r2, float nx, float ny, float nz );//Esto no va
 
   //! All the magic happens here
   virtual void startAnimation( );//esto no va
+  virtual void moveArt(int name, unsigned char axis, int sense);
   virtual void stopAnimation( );//esto no va
   virtual void drawInOpenGLContext( GLenum mode );//esto va
 
@@ -89,23 +90,26 @@ protected:
 
 protected:
   int m_Name;
-  float       m_Scale;
+  //float       m_Scale;
   Mesh*       m_Mesh;
   Mesh*       m_Mesh2;
   //Mesh*       m_Path;
   float       r;
-  //float       angx;
-  //float       angy;
-  //float       angz;
+  float       angx;
+  float       angy;
+  float       angz;
+
+  float       pos[3];
 
   //float m_Radius1;
   //float m_Radius2;
   //Vector m_Normal;
 
-  float m_Frequency;
-  float m_CurrentAngle;
-  bool m_Animating;
-  std::chrono::time_point< std::chrono::high_resolution_clock > m_StartAnimation;
+  //float m_Frequency;
+  //float m_CurrentAngle;
+  //bool m_Animating;
+  int         artSel;
+  //std::chrono::time_point< std::chrono::high_resolution_clock > m_StartAnimation;
 
   std::vector< SpatialObject* > m_Children;
 };

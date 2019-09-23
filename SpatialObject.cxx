@@ -8,17 +8,21 @@
 #include <map>
 #include <sstream>
 
+#define _PI 3.1415926535897932384626433832795
+#define _180_PI ( 180.0/_PI )
+
 // -------------------------------------------------------------------------
 SpatialObject::
 SpatialObject( )
   : m_Mesh( nullptr ),
     m_Mesh2( nullptr ),
+    artSel(0)
     //r(0.0),
     //angx(0.0),
     //angy(0.0),
     //angz(0.0),
-    m_CurrentAngle( 0 ),
-    m_Animating( false )
+    //m_CurrentAngle( 0 ),
+    //m_Animating( false )
 {
   //this->_createPath( );
   std::string("a");
@@ -30,12 +34,13 @@ SpatialObject::
 SpatialObject( const std::string& fname )// se ejecuta este
   : m_Mesh( nullptr ),
     m_Mesh2( nullptr ),
+    artSel(0)
     //r(0.0),
     //angx(0.0),
     //angy(0.0),
     //angz(0.0),
-    m_CurrentAngle( 0 ),
-    m_Animating( false )
+    //m_CurrentAngle( 0 ),
+    //m_Animating( false )
 {
   //this->_createPath( );
   std::cout<<"a"<<std::endl;
@@ -149,11 +154,11 @@ getName( ) const
 }
 
 // -------------------------------------------------------------------------
-const float& SpatialObject::
+/*const float& SpatialObject::
 getScale( ) const
 {
   return( this->m_Scale );
-}
+}*/
 
 // -------------------------------------------------------------------------
 /*void SpatialObject::
@@ -171,19 +176,50 @@ setPath( float r1, float r2, float nx, float ny, float nz )
 void SpatialObject::
 startAnimation( )
 {
-  this->m_Animating = true;
-  this->m_StartAnimation = std::chrono::high_resolution_clock::now( );
-  for( SpatialObject* child: this->m_Children )
-    child->startAnimation( );
+  //this->m_Animating = true;
+  //this->m_StartAnimation = std::chrono::high_resolution_clock::now( );
+  //for( SpatialObject* child: this->m_Children )
+    //child->startAnimation( );
 }
 
 // -------------------------------------------------------------------------
 void SpatialObject::
 stopAnimation( )
 {
-  this->m_Animating = false;
-  for( SpatialObject* child: this->m_Children )
-    child->stopAnimation( );
+  //this->m_Animating = false;
+  //for( SpatialObject* child: this->m_Children )
+    //child->stopAnimation( );
+}
+//--------------------------------------------------------------------------
+void SpatialObject::
+moveArt(int name, unsigned char axis, int sense){
+  if(name == this->m_Name){
+    std::cout<<"entra con nombre "<<this->m_Name<<std::endl;
+    switch(axis){
+      case'x':case'X':{
+        std::cout<<"entra con nombre-- "<<this->m_Name<<std::endl;
+        this->artSel = 1*sense;
+      }
+      break;
+      case'y':case'Y':{
+        this->artSel = 2*sense;
+        std::cout<<"entra con nombre-- "<<this->m_Name<<std::endl;
+      }
+      break;
+      case'z':case'Z':{
+        this->artSel = 3*sense;
+        std::cout<<"entra con nombre-- "<<this->m_Name<<std::endl;
+      }
+      break;
+      default:
+        std::cout<<"no entra con nombre-- "<<this->m_Name<<" y eje "<<axis<<std::endl;
+      break;
+    }
+  }else{
+    for( SpatialObject* child: this->m_Children )
+      child->moveArt(name, axis, sense);  
+  }
+  
 }
 
 // -------------------------------------------------------------------------
@@ -196,32 +232,82 @@ drawInOpenGLContext( GLenum mode )
   // Save call matrix
   glPushMatrix( );
 
-  // Show path
-  glPushMatrix( );
+  //glRotatef(this->angz,0,0,1);
+  if(this->artSel!=0){
+    switch(this->artSel){
+      case -3:{
+        this->angz = this->angz-1.0;
+        glRotatef(this->angz,0,0,1);
+        std::cout<<"-------"<<artSel<<std::endl;
+      }
+        break;
+      case -2:{
+        this->angy = this->angy -1.0;
+        glRotatef(this->angy,0,1,0);
+        std::cout<<"-------"<<artSel<<std::endl;
+      }
+        break;
+      case -1:{
+        this->angx = this->angx-1.0;
+        glRotatef(this->angx,1,0,0);
+        std::cout<<"-------"<<artSel<<std::endl;
+      }
+        break;
+      case 1:{
+        this->angx = this->angx+1.0;
+        std::cout<<"-------"<<artSel<<std::endl;
+        glRotatef(this->angx,1,0,0);
+      }        
+        break;
+      case 2:{
+        this->angy = this->angy+1.0;
+        std::cout<<"-------"<<artSel<<std::endl;
+        glRotatef(this->angy,0,1,0);
+      }        
+        break;
+      case 3:{
+        this->angz = this->angz+1.0;
+        glRotatef(this->angz,0,0,1); 
+        std::cout<<"-------"<<artSel<<std::endl;
+      }        
+        break;
+      default:
+        std::cout<<"default"<<std::endl;
+        break;
+    }
+    this->artSel = 0;
+  }
+
+  //std::cout<<this->angx<<"-"<<this->angy<<"-"<<this->angz<<std::endl;
+
   //glScalef( this->m_Radius1, this->m_Radius2, 1 );
   //this->m_Path->drawInOpenGLContext( GL_LINE_LOOP );
-  glPopMatrix( );
+  this->m_Mesh->drawInOpenGLContext( mode );
+
 
   // Show spatial body
-  if( this->m_Animating && this->m_Frequency > 0 )
+  /*if( this->m_Animating && this->m_Frequency > 0 )
   {
-    // Compute ellapsed milliseconds since aninamtion has started
+    Compute ellapsed milliseconds since aninamtion has started
     double s =
       std::chrono::duration_cast< std::chrono::milliseconds >(
         std::chrono::high_resolution_clock::now( ) - this->m_StartAnimation
         ).count( );
     this->m_CurrentAngle = 2.0 * _PI * s / ( this->m_Frequency * 1000.0 );
-  } // end if
-  /*glTranslatef(
-    this->m_Radius1 * std::cos( this->m_CurrentAngle ),
-    this->m_Radius2 * std::sin( this->m_CurrentAngle ),
-    0
-    );*/
+  } // end if*/
   glPushMatrix( );
-  glScalef( this->m_Scale, this->m_Scale, this->m_Scale );
-  this->m_Mesh->drawInOpenGLContext( mode );
+  glRotatef(this->angy,0,1,0);
+  glRotatef(this->angx,1,0,0);
+  glTranslatef(0,this->r/2.0,0);
+  glScalef( 1, this->r, 1 );
   this->m_Mesh2->drawInOpenGLContext( mode );
   glPopMatrix( );
+
+  glTranslatef(pos[0],pos[1],pos[2]);
+
+  //glPushMatrix();
+  //this->m_Mesh->drawInOpenGLContext(mode);
+  //glPopMatrix();
 
   // Show children
   for( SpatialObject* child: this->m_Children )
@@ -358,39 +444,58 @@ _strIn( std::istream& in )
   } // end if*/
   //--------------------------------------------------------------
   std::string line;
-  int x, y, z;
+  float x, y, z;
   std::getline( in, line );
   std::istringstream b( line );
   b >> x >> y >> z;
   std::cout<< x <<" "<< y <<" "<< z <<std::endl;
-  
+  this->pos[0]=x;
+  this->pos[1]=y;
+  this->pos[2]=z;
   float r = std::sqrt((x*x)+(y*y)+(z*z));
   this->r = r;
-  float theta, phi = 0.0;
-  if(z > 0.0)
+  std::cout<<this->r<<std::endl;
+  float theta = 0.0, phi = 0.0;
+  if(y > 0.0){
     theta = std::atan(std::sqrt((z*z)+(x*x))/y);
-  if(z == 0.0)
+    std::cout<<"y mayor a 0"<<std::endl;
+  }
+  if(y == 0.0){
+    std::cout<<"y igual a 0"<<std::endl;
     theta = _PI/2.0;
-  if(z < 0.0)
+  }
+  if(y < 0.0){
+    std::cout<<"y menor a 0"<<std::endl;
     theta = _PI + std::atan(std::sqrt((z*z)+(x*x))/y);
-
-  if(z > 0.0 && x > 0.0)
+  }
+  if(z > 0.0 && x > 0.0){
+    std::cout<<"z mayor a 0 y x mayor a 0"<<std::endl;
     phi = std::atan(x/z);
-  if (z > 0.0 && x < 0.0)
+  }
+  if (z > 0.0 && x < 0.0){
+    std::cout<<"z mayor a 0 y x menor a 0"<<std::endl;
     phi = (2*_PI)+std::atan(x/z);
+  }
   if(z == 0.0){
+    std::cout<<"z igual a 0"<<std::endl;
     if(x < 0.0){
+      std::cout<<"x menor a 0"<<std::endl;
       phi = (_PI/2.0)*(-1.0);
     }else{
+      std::cout<<"x mayor o igual a 0"<<std::endl;
       phi = (_PI/2.0); 
     }
   }
-  if(z < 0.0)
+  if(z < 0.0){
+    std::cout<<"z menor a 0"<<std::endl;
     phi = _PI + std::atan(x/z);
+  }
 
-  //this->angx = theta;
-  //this->angy = phi;
-  //this->angz = -theta;
+  this->angx = theta*_180_PI;
+  this->angy = phi*_180_PI;
+  this->angz = -theta*_180_PI;
+
+  std::cout<<this->angx<<" "<<this->angy<<" "<<this->angz<<std::endl;
   
   if( this->m_Mesh != nullptr )
     delete this->m_Mesh;
@@ -398,10 +503,8 @@ _strIn( std::istream& in )
   if( this->m_Mesh2 != nullptr )
     delete this->m_Mesh2;
   this->m_Mesh2 = new Mesh( "cube.obj" );
-  this->m_Mesh->setColor( 1, 1, 1 );//Falta definir
-  this->m_Mesh2->setColor( 1, 1, 0 );//.......................
-
-  this->m_Scale = 1;
+  this->m_Mesh->setColor( 1, 1, 1 );//articulación
+  this->m_Mesh2->setColor( 0.5, 0.5, 0.5 );//brazo
 
   if(this->m_Name >1){
     SpatialObject* child = new SpatialObject( );
