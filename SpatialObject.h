@@ -95,9 +95,9 @@ protected:
   Mesh*       m_Mesh2;
   //Mesh*       m_Path;
   float       r;
-  float       ang[3];
-  float       d[3];
-  float       pos[3];
+  std::vector< float >      ang;
+  std::vector< float >       d;
+  std::vector< float >       pos;
   bool ultimo;
 
   //float m_Radius1;
