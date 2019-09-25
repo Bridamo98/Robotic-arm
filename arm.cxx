@@ -20,11 +20,14 @@ class Arm {       // The class
 	  //Mesh*       m_Mesh;//reemplazar por lo que vimos la ultima clase
 	  //Mesh*       m_Mesh2;//.........................................
 	  //Mesh*       m_Path;
-	  float       r;
-	  float*     ang;
+	  float        r;
+	  float		   _theta;
+	  float		   _phi;
+	  float*       ang;
 	  float*       d;
-	  float*       pos;
-	  bool ultimo;
+	  float*       posi;
+	  float*       posa;	
+	  //bool ultimo;
 
 	  //float m_Radius1;
 	  //float m_Radius2;
@@ -59,9 +62,10 @@ Arm::Arm( )
     //m_Animating( false )
 {
   //_createPath( );
-	ang = new float[3];
+	ang = new float[2];
 	d = new float[3];
-	pos = new float[3];
+	posi = new float[3];
+	posa = new float[3];
   std::string("a");
 
 }
@@ -163,14 +167,16 @@ void Arm::moveArt(int name, unsigned char axis, int sense){
   }
 }
 
+
+
 void Arm::drawInOpenGLContext( GLenum mode )
 {
   //if( m_Mesh == nullptr )
     //return;
 
   // Save call matrix
-  glPushMatrix( );
   glColor3f(1,1,1);
+  glPushMatrix( );
   
 
   //glRotatef(angz,0,0,1);
@@ -178,37 +184,39 @@ void Arm::drawInOpenGLContext( GLenum mode )
     switch(artSel){
       case -3:{
         d[2] = d[2]-1.0;
-
+        _theta += 1.0;
         std::cout<<"-------"<<artSel<<std::endl;
       }
         break;
       case -2:{
         d[1] = d[1] -1.0;
-
+        _phi -=1.0;
         std::cout<<"-------"<<artSel<<std::endl;
       }
         break;
       case -1:{
         d[0] = d[0]-1.0;
-
+        _theta -= 1.0;
         std::cout<<"-------"<<artSel<<std::endl;
       }
         break;
       case 1:{
         d[0] = d[0]+1.0;
+        _theta += 1.0;
         std::cout<<"-------"<<artSel<<std::endl;
 
       }
         break;
       case 2:{
         d[1] = d[1]+1.0;
+        _phi += 1.0;
         std::cout<<"-------"<<artSel<<std::endl;
 
       }
         break;
       case 3:{
         d[2] = d[2]+1.0;
-
+        _theta -= 1.0;
         std::cout<<"-------"<<artSel<<std::endl;
       }
         break;
@@ -218,157 +226,50 @@ void Arm::drawInOpenGLContext( GLenum mode )
     }
     artSel = 0;
   }
+  posa[0] = r * std::sin(_theta) * std::sin(_phi);
+  posa[1] = r * std::cos(_theta);
+  posa[2] = r * std::sin(_theta) * std::cos(_phi);
+
   glRotatef(d[2],0,0,1);
   glRotatef(d[1],0,1,0);
   glRotatef(d[0],1,0,0);
 
-  //std::cout<<angx<<"-"<<angy<<"-"<<angz<<std::endl;
+  glutWireSphere( 1, 10, 10 );//..............................................ESFERA......................................
 
-  //glScalef( m_Radius1, m_Radius2, 1 );
-  //m_Path->drawInOpenGLContext( GL_LINE_LOOP );
-
-  glutWireCube(1);( mode );//cubo de tamaño 1...................................................................
-
-
-  // Show spatial body
-  /*if( m_Animating && m_Frequency > 0 )
-  {
-    Compute ellapsed milliseconds since aninamtion has started
-    double s =
-      std::chrono::duration_cast< std::chrono::milliseconds >(
-        std::chrono::high_resolution_clock::now( ) - m_StartAnimation
-        ).count( );
-    m_CurrentAngle = 2.0 * _PI * s / ( m_Frequency * 1000.0 );
-  } // end if*/
   glPushMatrix( );
   glRotatef(ang[1],0,1,0);
   glRotatef(ang[0],1,0,0);
-  //glRotatef(angy-(_PI/2.0),0,1,0);
-  //glRotatef(angz,0,0,1);
-
+  glColor3f(1,1,0);
   glTranslatef(0,r/2.0,0);
   glScalef( 1, r, 1 );
-  glutWireDodecahedron();//..............................................ESFERA......................................
+  glutWireCube(1);//cubo de tamaño 1...................................................................
   glPopMatrix( );
 
-  glTranslatef(pos[0],pos[1],pos[2]);
-
-  //glPushMatrix();
-  //m_Mesh->drawInOpenGLContext(mode);
-  //glPopMatrix();
+  glTranslatef(posi[0],posi[1],posi[2]);
 
   // Show children
-  for( Arm* child: m_Children )
-    child->drawInOpenGLContext( mode );
+  bool atLeastOneChild = false;
+  for( Arm* child: m_Children ){
+  	child->drawInOpenGLContext( mode );
+  	atLeastOneChild = true;
+  }
+    
 
+  if(atLeastOneChild){
+  	posa[0] = posa[0] + m_Children[0]->posa[0];
+	posa[1] = posa[1] + m_Children[0]->posa[1];
+	posa[2] = posa[2] + m_Children[0]->posa[2];
+
+	std::cout<<"pos acumnulada en "<<m_Name<<" = "<<posa[0] << " "<<posa[1] <<" "<<posa[2]<<std::endl;
+
+  }
+  
   // Get call matrix
   glPopMatrix( );
 }
 
 void Arm::_strIn( std::istream& in )
 {
-  /*typedef std::map< char, std::string > _TMap;
-
-  // Read data for this spatial object//esto no vaaaaaaaaaaaa
-  std::string line;
-  std::getline( in, line );
-  _TMap data;
-  while( line.substr( 0, 2 ) != "--" )
-  {
-    std::istringstream d( line );
-    char data_type;
-    d >> data_type;
-
-    std::string data_value;
-    std::string v;
-    d >> data_value;
-    while( !d.eof( ) )
-    {
-      std::string v;
-      d >> v;
-      data_value += " " + v;
-    } // end while
-    data[ data_type ] = data_value;
-    std::getline( in, line );
-  } // end while
-
-  // Check name//yaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  _TMap::const_iterator dIt = data.find( 'N' );
-  if( dIt == data.end( ) )
-    throw std::runtime_error( "Field \"N\" is required." );
-  m_Name = 1;
-
-  // Check path//esto no vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  dIt = data.find( 'P' );
-  if( dIt == data.end( ) )
-    throw std::runtime_error( "Field \"P\" is required." );
-  std::istringstream path_str( dIt->second );
-  std::vector< float > path;
-  while( !path_str.eof( ) )
-  {
-    path.push_back( 0 );
-    path_str >> path.back( );
-  } // end while
-  if( path.size( ) == 4 )
-    setPath( path[ 0 ], path[ 0 ], path[ 1 ], path[ 2 ], path[ 3 ] );
-  else if( path.size( ) == 5 )
-    setPath( path[ 0 ], path[ 1 ], path[ 2 ], path[ 3 ], path[ 4 ] );
-  else
-    throw std::runtime_error( "Malformed path." );
-
-  // Check base model// yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  dIt = data.find( 'M' );
-  if( dIt == data.end( ) )
-    throw std::runtime_error( "Field \"M\" is required." );
-  if( m_Mesh != nullptr )
-    delete m_Mesh;
-  m_Mesh = new Mesh( dIt->second );
-
-  // Check color//yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  dIt = data.find( 'C' );
-  float r = 1, g = 1, b = 1;
-  if( dIt != data.end( ) )
-  {
-    std::istringstream d( dIt->second );
-    d >> r >> g >> b;
-  } // end if
-  m_Mesh->setColor( r, g, b );
-
-  // Check scale//esto si vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  dIt = data.find( 'S' );
-  if( dIt != data.end( ) )
-  {
-    std::istringstream d( dIt->second );
-    d >> m_Scale;
-  }
-  else
-    m_Scale = 1;
-
-  // Check frequency//esto no vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  dIt = data.find( 'F' );
-  if( dIt != data.end( ) )
-  {
-    std::istringstream d( dIt->second );
-    d >> m_Frequency;
-  }
-  else
-    m_Frequency = 0;
-
-  // Check recursion//yaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-  dIt = data.find( 'D' );
-  if( dIt != data.end( ) )
-  {
-    std::istringstream d( dIt->second );
-    unsigned int nRecs;
-    d >> nRecs;
-    for( unsigned int i = 0; i < nRecs; ++i )
-    {
-      Arm* child = new Arm( );
-      in >> child;
-      addChild( child );
-    } // end for
-  } // end if*/
-  //--------------------------------------------------------------
   std::string line;
   float x, y, z;
   std::getline( in, line );
@@ -377,15 +278,17 @@ void Arm::_strIn( std::istream& in )
   std::cout<< x <<" "<< y <<" "<< z <<std::endl;
   std::cout<<"1"<<std::endl;
 
-  pos[0]=x;
-  std::cout<<"1"<<std::endl;
-  pos[1]=y;
-  pos[2]=z;
+  posi[0]=x;
+  posi[1]=y;
+  posi[2]=z;
+  posa[0]=x;
+  posa[1]=y;
+  posa[2]=z;
   d[0]=0.0;
   d[1]=0.0;
   d[2]=0.0;
-  float r = std::sqrt((x*x)+(y*y)+(z*z));
-  r = r;
+  float rr = std::sqrt((x*x)+(y*y)+(z*z));
+  r = rr;
   std::cout<<r<<std::endl;
   float theta = 0.0, phi = 0.0;
   if(y > 0.0){
@@ -425,11 +328,11 @@ void Arm::_strIn( std::istream& in )
 
   ang[0] = theta*_180_PI;
   ang[1] = phi*_180_PI;
-  ang[2] = -theta*_180_PI;
+  _theta = theta;
+  _phi = phi;
+  //ang[2] = -theta*_180_PI;//Angulo en z, por el momento no se necesita.
 
-  std::cout<<ang[0]<<" "<<ang[1]<<" "<<ang[2]<<std::endl;
-
-  
+  std::cout<<ang[0]<<" "<<ang[1]<<std::endl;
 
   if(m_Name >1){
     std::cout<<"1"<<std::endl;
@@ -442,7 +345,4 @@ void Arm::_strIn( std::istream& in )
     addChild( child );
     std::cout<<"1"<<std::endl;
   }
-
-
-
 }
