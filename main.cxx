@@ -9,23 +9,37 @@
 
 #include <GL/glut.h>
 #include <iostream>
-
+#include <chrono>
 #include "Camera.cxx"
 #include "arm.cxx"
+
+#define _G 9.807
 
 // -------------------------------------------------------------------------
 Camera myCamera;//esto va
 Arm* myStar = nullptr;//cambiar el nombre
+GLUquadricObj* myObject = nullptr;
+GLUquadricObj* myObject2 = nullptr;
 bool articulacionSeleccionada = false;
 bool ejeSeleccionado = false;
 int artSel;
 int artAct = 0;
 float* posActualDePunta;
-float* rotPad;
+float* ballPos;
+int rBall = 2.5; 
+float* colorBall;
 unsigned char axis;
 unsigned char axisAct = ' ';
-
-
+bool near = false;
+bool grabbed = false;
+bool moving = false;
+bool falling = false;
+float yi;
+float vi;
+float yt;
+float vt;
+std::chrono::time_point< std::chrono::high_resolution_clock > starMoving;
+double t;
 // -------------------------------------------------------------------------
 Arm* initWorld( int argc, char* argv[] );//esto va
 void destroyWorld( Arm* star );//esto va
@@ -38,6 +52,9 @@ void keyboardCbk( unsigned char key, int x, int y );//esto va
 void mouseClickCbk( int button, int state, int x, int y );//esto va
 void mouseMoveCbk( int x, int y );// esto va
 std::istringstream readFirstLine(Arm* arm, const std::string& fname);
+void drawFloor();
+void drawBall();
+void grabValidation();
 // -------------------------------------------------------------------------
 int main( int argc, char* argv[] )
 {
@@ -99,13 +116,50 @@ std::istringstream readFirstLine(Arm* arm, const std::string& fname ){
   arm->m_Name = name;
   return buffer;
 }
+void drawBall(){
+  if(!grabbed){
+    glPushMatrix();
+      glColor3f(colorBall[0],colorBall[1],colorBall[2]);
+      glTranslatef(ballPos[0],ballPos[1],ballPos[2]);
+      glScalef(rBall,rBall,rBall);
+      gluSphere( myObject, 1, 50, 50 );
+    glPopMatrix();  
+  }
+}
+void drawFloor(){
+  glPushMatrix();
+  glRotatef(-90,1,0,0);
+  glColor3f(0.5,0.5,0.5);
+  gluDisk( myObject2, 0, 300, 10, 10 );
+  glPopMatrix();
+}
+
+void grabValidation(){
+  float distance = std::sqrt(((ballPos[0] - posActualDePunta[0])*(ballPos[0] - posActualDePunta[0]))+
+                             ((ballPos[1] - posActualDePunta[1])*(ballPos[1] - posActualDePunta[1]))+
+                            ((ballPos[2] - posActualDePunta[2])*(ballPos[2] - posActualDePunta[2])));
+
+  if(distance < rBall && !grabbed){
+    colorBall[0] = 1.0;
+    colorBall[1] = 1.0;
+    colorBall[2] = 1.0;
+    near = true;
+  }else{
+    colorBall[0] = 1.0;
+    colorBall[1] = 1.0;
+    colorBall[2] = 0.0;
+    near = false;
+  }
+
+}
+
 // -------------------------------------------------------------------------
 Arm* initWorld( int argc, char* argv[] )//cambiar tipo de retorno y función
 {
   // Initialize camera//cambiar--Listo
   myCamera.setFOV( 45 );
   myCamera.setPlanes( 1e-2, 100000 );
-  myCamera.move( Vector( 50, 0, 0 ) );
+  myCamera.move( Vector( 0, 40, 150 ) );
   //myCamera.rotY(90);
   //myCamera.rotZ(90);
   
@@ -124,6 +178,21 @@ Arm* initWorld( int argc, char* argv[] )//cambiar tipo de retorno y función
   Arm* arm = new Arm();
   std::istringstream buffer = readFirstLine(arm, argv[ 1 ]);
   arm->_strIn(buffer);
+  myObject = gluNewQuadric( );
+  gluQuadricDrawStyle( myObject, GLU_LINE );
+  myObject2 = gluNewQuadric( );
+  gluQuadricDrawStyle( myObject2, GLU_FILL);
+
+  ballPos = new float[3];
+  ballPos[0] = 70.0; 
+  ballPos[1] = rBall; 
+  ballPos[2] = 0.0;
+
+  colorBall = new float[3];
+
+  colorBall[0] = 1.0;
+  colorBall[1] = 1.0;
+  colorBall[2] = 0.0;
   return( arm );
 }
 
@@ -132,6 +201,16 @@ void destroyWorld( Arm* star )
 {
   if( star != nullptr )
     delete star;
+
+  if( myObject != nullptr )
+    gluDeleteQuadric( myObject );
+  myObject = nullptr;
+
+  if( myObject2 != nullptr )
+    gluDeleteQuadric( myObject2 );
+  myObject2 = nullptr;
+
+  delete ballPos;
 }
 
 // -------------------------------------------------------------------------
@@ -145,26 +224,63 @@ void displayCbk( )
   myCamera.loadCameraMatrix( );
 
   posActualDePunta = new float[3];
-  rotPad = new float[3];
+  
 
   posActualDePunta[0] = 0.0;
   posActualDePunta[1] = 0.0;
   posActualDePunta[2] = 0.0;
-
-  rotPad[0] = 0.0;
-  rotPad[1] = 0.0;
-  rotPad[2] = 0.0;
   // Draw the scene
+  drawFloor();
+  if(moving){
+    t = std::chrono::duration_cast< std::chrono::microseconds >(
+        std::chrono::high_resolution_clock::now( ) - starMoving
+        ).count( )/1000000.0;
+    std::cout<<"tiempo transcurrido "<< t <<std::endl;
+
+    if(falling){
+      yt = yi - 0.5*_G*(t*t);
+      ballPos[1] = yt;
+      if(yt <= rBall){
+        vi = _G*t*0.8;
+        starMoving = std::chrono::high_resolution_clock::now( );
+        falling = false;
+      }
+    }else{
+      yt = vi*t-0.5*_G*(t*t);
+      vt = vi -_G*t;
+      ballPos[1] = yt;
+      if(vt <= 0.0){
+        yi = yt;
+        starMoving = std::chrono::high_resolution_clock::now( );
+        falling = true;
+        if(yt <= rBall){
+          moving = false;
+          falling = false;
+        }
+      }
+    }
+  }
+  drawBall();
   myStar->drawBase();
 
   myStar->drawInOpenGLContext( GL_LINE_LOOP, false ,0.0,' ',
-  /*IMPORTANTE*/posActualDePunta, /*PARA DIFERENCIARLA DE LAS DEMÁS*/artAct, /*CREO QUE NO SE NECESITA*/ axisAct);
+  /*IMPORTANTE*/posActualDePunta, /*PARA DIFERENCIARLA DE LAS DEMÁS*/artAct, /*CREO QUE NO SE NECESITA*/ axisAct, myObject2, grabbed
+    ,colorBall,rBall,myObject);
 
+  if(grabbed){
+    ballPos[0] = posActualDePunta[0];
+    ballPos[1] = posActualDePunta[1];
+    ballPos[2] = posActualDePunta[2];
+  }
+
+  grabValidation();
+
+  std::cout<<"Pos actual de bola "<<ballPos[0]<<" "<<ballPos[1]<<" "<< ballPos[2]<<std::endl;
   std::cout<<"Pos actual de punta "<<posActualDePunta[0]<<" "<<posActualDePunta[1]<<" "<< posActualDePunta[2]<<std::endl;
 
   delete posActualDePunta;
 
-  delete rotPad;
+  //delete ballPos;
 
   // Finish
   glutSwapBuffers( );
@@ -308,7 +424,18 @@ void keyboardCbk( unsigned char key, int x, int y )
     break;
     case 'p': case 'P':
   {
-    //agarrar bola
+    if(grabbed){//CASO DE BORRAR LA ESFERA DEL ULTIMO HIJO Y COMENZAR CON LA CAIDA LIBRE
+      moving = true;
+      falling = true;
+      yi = ballPos[1];
+      std::cout<<"yi en evento "<<yi<<std::endl;
+      vi = 0; 
+      grabbed = false;
+      starMoving = std::chrono::high_resolution_clock::now( );
+      //std::cout<<"entra a soltar"<<std::endl;
+    }else if (near){//CASO DE BORRAR ESFERA DE ESTE ARCHIVO Y PINTARLA EN EL ÚLTIMO HIJO
+      grabbed = true;
+    }
   }
     break;
   case '-':

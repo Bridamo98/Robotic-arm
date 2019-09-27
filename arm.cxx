@@ -45,7 +45,7 @@ class Arm {       // The class
 	  std::vector< Arm* > m_Children;
     Arm( );
   	Arm(const std::string& fname );
-  	void drawInOpenGLContext( GLenum mode, bool rotated, float rotAng, char axisRot,float* posAct, int artAct, char axisAct);
+  	void drawInOpenGLContext( GLenum mode, bool rotated, float rotAng, char axisRot,float* posAct, int artAct, char axisAct, GLUquadricObj* myObject, bool grabbed, float* colorBall, int rBall, GLUquadricObj* ball);
   	void _strIn( std::istream& in );
   	//Mesh* getMesh( );
 //Mesh* getMesh2( );
@@ -340,7 +340,7 @@ void Arm::moveArt(int name, unsigned char axis, int sense){
 
 
 
-void Arm::drawInOpenGLContext( GLenum mode, bool rotated, float rotAng, char axisRot, float* posAct, int artAct, char axisAct/*esto no sirve*/)
+void Arm::drawInOpenGLContext( GLenum mode, bool rotated, float rotAng, char axisRot, float* posAct, int artAct, char axisAct/*esto no sirve*/, GLUquadricObj* arti, bool grabbed, float* colorBall, int rBall, GLUquadricObj* ball)
 {
  
   // Save call matrix
@@ -489,7 +489,7 @@ void Arm::drawInOpenGLContext( GLenum mode, bool rotated, float rotAng, char axi
   
   glLineWidth(1);
 
-  glutWireSphere( 2, 10, 10 );//..............................................ESFERA......................................
+  gluSphere( arti, 2, 10, 10 );//..............................................ESFERA......................................
 
   glPushMatrix( );
   //glRotatef(rotPad[2],rotz[0],rotz[1],rotz[2]);
@@ -519,17 +519,19 @@ void Arm::drawInOpenGLContext( GLenum mode, bool rotated, float rotAng, char axi
   // Show children
   bool atLeastOneChild = false;
   for( Arm* child: m_Children ){
-  	child->drawInOpenGLContext( mode, rotated, rotAng, axisRot, posAct, artAct, axisAct);
+  	child->drawInOpenGLContext( mode, rotated, rotAng, axisRot, posAct, artAct, axisAct, arti, grabbed,colorBall,rBall,ball);
   	atLeastOneChild = true;
   }
     
 
-  if(atLeastOneChild && rotated){
-  	//posa[0] = posa[0] + m_Children[0]->posa[0];
-	//posa[1] = posa[1] + m_Children[0]->posa[1];
-	//posa[2] = posa[2] + m_Children[0]->posa[2];
-
-
+  if(!atLeastOneChild){
+  	if(grabbed){
+  		glPushMatrix();
+	      glColor3f(colorBall[0],colorBall[1],colorBall[2]);
+	      glScalef(rBall,rBall,rBall);
+	      gluSphere( ball, 1, 50, 50 );
+    	glPopMatrix();  
+  	}
   }
   
   // Get call matrix
