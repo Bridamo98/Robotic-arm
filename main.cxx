@@ -19,7 +19,12 @@ Arm* myStar = nullptr;//cambiar el nombre
 bool articulacionSeleccionada = false;
 bool ejeSeleccionado = false;
 int artSel;
+int artAct = 0;
+float* posActualDePunta;
+float* rotPad;
 unsigned char axis;
+unsigned char axisAct = ' ';
+
 
 // -------------------------------------------------------------------------
 Arm* initWorld( int argc, char* argv[] );//esto va
@@ -100,14 +105,14 @@ Arm* initWorld( int argc, char* argv[] )//cambiar tipo de retorno y función
   // Initialize camera//cambiar--Listo
   myCamera.setFOV( 45 );
   myCamera.setPlanes( 1e-2, 100000 );
-  myCamera.move( Vector( 0, 0, 30 ) );
+  myCamera.move( Vector( 50, 0, 0 ) );
   //myCamera.rotY(90);
   //myCamera.rotZ(90);
   
 
 
   // OpenGL initialization
-  glClearColor( 0, 0, 0, 0 );
+  glClearColor( 0.75, 0.75, 0.75, 0 );
 
   // Check input arguments
   if( argc < 2 )
@@ -139,8 +144,27 @@ void displayCbk( )
   // Prepare model matrix
   myCamera.loadCameraMatrix( );
 
+  posActualDePunta = new float[3];
+  rotPad = new float[3];
+
+  posActualDePunta[0] = 0.0;
+  posActualDePunta[1] = 0.0;
+  posActualDePunta[2] = 0.0;
+
+  rotPad[0] = 0.0;
+  rotPad[1] = 0.0;
+  rotPad[2] = 0.0;
   // Draw the scene
-  myStar->drawInOpenGLContext( GL_LINE_LOOP );
+  myStar->drawBase();
+
+  myStar->drawInOpenGLContext( GL_LINE_LOOP, false ,0.0,' ',
+  /*IMPORTANTE*/posActualDePunta, /*PARA DIFERENCIARLA DE LAS DEMÁS*/artAct, /*CREO QUE NO SE NECESITA*/ axisAct);
+
+  std::cout<<"Pos actual de punta "<<posActualDePunta[0]<<" "<<posActualDePunta[1]<<" "<< posActualDePunta[2]<<std::endl;
+
+  delete posActualDePunta;
+
+  delete rotPad;
 
   // Finish
   glutSwapBuffers( );
@@ -196,6 +220,7 @@ void keyboardCbk( unsigned char key, int x, int y )
     if(!articulacionSeleccionada){
       articulacionSeleccionada = true;
       artSel=1;
+      artAct=1;
       std::cout<<"entra "<<key<<std::endl;
     }
   }
@@ -204,6 +229,7 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     if(!articulacionSeleccionada){
       articulacionSeleccionada = true;
+      artAct=2;
       artSel=2;
       std::cout<<"entra "<<key<<std::endl;
     } 
@@ -213,6 +239,7 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     if(!articulacionSeleccionada){
       articulacionSeleccionada = true;
+      artAct=3;
       artSel=3;
       std::cout<<"entra "<<key<<std::endl;
     }
@@ -222,6 +249,7 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     if(!articulacionSeleccionada){
       articulacionSeleccionada = true;
+      artAct=4;
       artSel=4;
       std::cout<<"entra "<<key<<std::endl;
     }
@@ -231,6 +259,7 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     if(!articulacionSeleccionada){
       articulacionSeleccionada = true;
+      artAct=5;
       artSel=5;
       std::cout<<"entra "<<key<<std::endl;
     }
@@ -240,6 +269,7 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     if(!articulacionSeleccionada){
       articulacionSeleccionada = true;
+      artAct=6;
       artSel=6;
       std::cout<<"entra "<<key<<std::endl;
     }
@@ -249,6 +279,7 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     if(!articulacionSeleccionada){
       articulacionSeleccionada = true;
+      artAct=7;
       artSel=7;
       std::cout<<"entra "<<key<<std::endl;
     }
@@ -258,6 +289,7 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     if(!articulacionSeleccionada){
       articulacionSeleccionada = true;
+      artAct=8;
       artSel=8;
       std::cout<<"entra "<<key<<std::endl;
     }
@@ -267,7 +299,9 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     if(!articulacionSeleccionada){
       articulacionSeleccionada = true;
+      artAct=9;
       artSel=9;
+
       std::cout<<"entra "<<key<<std::endl;
     }
   }
@@ -282,6 +316,8 @@ void keyboardCbk( unsigned char key, int x, int y )
     if(ejeSeleccionado){
       myStar->moveArt(artSel, axis, -1);
       std::cout<<"entra "<<key<<std::endl;
+      artAct = artSel;
+      
     }
   }
     break;
@@ -290,6 +326,7 @@ void keyboardCbk( unsigned char key, int x, int y )
     if(ejeSeleccionado){
       myStar->moveArt(artSel, axis, 1);
       std::cout<<"entra "<<key<<std::endl;
+      artAct = artSel;
     } 
   }
     break;
@@ -297,6 +334,8 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     articulacionSeleccionada = false;
     ejeSeleccionado = false;
+    artAct = 0;
+    axisAct = ' ';
     std::cout<<"entra "<<key<<std::endl;
   }
     break;
@@ -304,6 +343,7 @@ void keyboardCbk( unsigned char key, int x, int y )
   {
     if(articulacionSeleccionada && !ejeSeleccionado){
       axis = key;
+      axisAct = axis;
       ejeSeleccionado = true;
       std::cout<<"entra "<<key<<std::endl;
     }
